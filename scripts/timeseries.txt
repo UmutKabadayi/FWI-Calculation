@@ -1,0 +1,52 @@
+# Bu koda Los Angeles yangınlarının verisi verilerek Gantt Çizelgesi olarak zaman serisi çizdirilmiştir.
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+
+data = {
+    "Yangın Adı": ["Palisides", "Eaton", "Hughes", "Kenneth", "Hurst", "Lidia"],
+    "Başlangıç": ["2025-01-07 18:30", "2025-01-08 02:18", "2025-01-22 18:53", "2025-01-09 23:34", "2025-01-08 06:29", "2025-01-08 10:07"],
+    "Maksimum Başlangıç": ["2025-01-12 19:13", "2025-01-11 03:23", "2025-01-24 04:17", "2025-01-11 01:35", "2025-01-11 14:24", "2025-01-10 15:40"],
+    "Maksimum Bitiş": ["2025-01-31 18:48", "2025-01-31 18:48", "2025-01-31 06:07", "2025-01-12 15:48", "2025-01-16 20:05", "2025-01-11 15:40"],
+    "Tamamlanma": ["2025-01-31 21:48", "2025-01-31 21:48", "2025-01-31 09:07", "2025-01-12 18:48", "2025-01-16 23:05", "2025-01-11 18:40"]
+}
+df = pd.DataFrame(data)
+df["Başlangıç"] = pd.to_datetime(df["Başlangıç"])
+df["Maksimum Başlangıç"] = pd.to_datetime(df["Maksimum Başlangıç"])
+df["Maksimum Bitiş"] = pd.to_datetime(df["Maksimum Bitiş"])
+df["Tamamlanma"] = pd.to_datetime(df["Tamamlanma"])
+
+fig, ax = plt.subplots(figsize=(12, 6))
+
+for i, row in df.iterrows():
+    süre1 = row["Maksimum Başlangıç"] - row["Başlangıç"]
+    süre2 = row["Maksimum Bitiş"] - row["Maksimum Başlangıç"]
+    süre3 = row["Tamamlanma"] -  row["Maksimum Bitiş"]
+    ax.barh(row["Yangın Adı"], süre1, left=row["Başlangıç"], color="firebrick", label="Başlangıç → Maksimum" if i == 0 else "")
+    ax.barh(row["Yangın Adı"], süre2, left=row["Maksimum Başlangıç"], color="gold", label="Maksimum → Tamamlanma" if i == 0 else "")
+    ax.barh(row["Yangın Adı"], süre3, left=row["Maksimum Bitiş"], color="green", label="Tamamlanma" if i == 0 else "")
+    ax.text(row["Başlangıç"] + süre1 / 2, i, f"{int(süre1.total_seconds() // 86400)}gün", 
+            va='center', ha='center', fontsize=8, color="black",bbox=dict(facecolor='white', edgecolor='none', boxstyle='round,pad=0.2'))
+    ax.text(row["Maksimum Başlangıç"] + süre2 / 2, i, f"{int(süre2.total_seconds() // 86400)} gün",
+    va='center', ha='center', fontsize=8, color="black", bbox=dict(facecolor='white', edgecolor='none', boxstyle='round,pad=0.2'))
+    ax.text(
+    row["Başlangıç"], i + 0.4,
+    f"Başlangıç: {row['Başlangıç'].strftime('%d-%m-%Y %H:%M')}",
+    va='bottom', ha='left', fontsize=9, color="black")
+
+ax.set_xlim(pd.Timestamp("2025-01-01"), pd.Timestamp("2025-02-02"))
+ax.xaxis.set_major_locator(mdates.DayLocator(interval=2))
+ax.xaxis.set_major_formatter(mdates.DateFormatter('%m-%d'))
+plt.xticks(rotation=0)
+ax.set_title("2025 Ocak Ayı Los Angeles Yangınları Zaman Çizelgesi",fontsize=16)
+ax.set_xlabel("Zaman",fontsize=12)
+ax.set_ylabel("Yangınlar",fontsize=12)
+handles, labels = ax.get_legend_handles_labels()
+by_label = dict(zip(labels, handles))
+ax.legend(by_label.values(), by_label.keys())
+
+plt.grid(True, linestyle='--', alpha=0.5)
+plt.tight_layout()
+plt.savefig("yangin_zaman_cizelgesi.png", dpi=300, bbox_inches='tight')
+plt.show()

@@ -1,0 +1,40 @@
+# Bu kod sadece tek istasyon için düzenlenecek.
+# Burada 3 farklı verinin (fwiistasyon-fwiera5-fwiwrf) zaman serisi çizdirilecek
+
+FWI <- read_excel("fwiout_palisides.xlsx")
+
+png(file = "fwiseries_palisides.png", width = 1800, height = 1200, res = 150)
+
+plot(FWI$`SE007`, type = "l", col = "blue", 
+     main = "OCAK 2025 LOS ANGELES PALISIDES YANGINI FWI ZAMAN SERİSİ", 
+     xlab = "ZAMAN", ylab = "FWI DEĞERLERİ", 
+     yaxt = "n",xaxt = "n", lwd = 2, ylim = c(0,150), xlim = c(0,800))
+
+lines(FWI$`SE030`, col = "darkgreen", lwd = 2)
+lines(FWI$`WRF`, col = "red", lwd = 2)
+lines(FWI$`ERA5`, col = "orange", lwd = 2)
+
+axis(1, at = seq(12, 744, 24), labels = 1:31, cex.axis=0.8)
+axis(2, at = seq(0, 200, 10), labels = seq(0, 200, 10),cex.axis=0.8)
+
+abline(v = seq(0, 744, 24), col = "gray", lwd = 1.5, lty = 2)
+abline(h = 5.2, col = "black", lwd = 2, lty = 3)
+abline(h =11.2, col = "black", lwd = 2, lty = 3)
+abline(h = 21.3, col = "black", lwd = 2, lty = 3)
+abline(h = 38, col = "black", lwd = 2, lty = 3)
+abline(h = 50, col = "black", lwd = 2, lty = 3)
+
+text(x = 790, y = -0.5, labels = "Very Low", srt = 0, col = "black", cex = 0.8)
+text(x = 790, y = 9, labels = "Low", srt = 0, col = "black", cex = 0.8)
+text(x = 790, y = 17, labels = "Moderate", srt = 0, col = "black", cex = 0.8)
+text(x = 790, y = 30, labels = "High", srt = 0, col = "black", cex = 0.8)
+text(x = 790, y = 44, labels = "Very High", srt = 0, col = "black", cex = 0.8)
+text(x = 790, y = 55, labels = "Extreme", srt = 0, col = "black", cex = 0.8)
+
+box(lwd=4)
+box(lwd=2, col="white")
+
+legend(x = 750, y = 150, legend = c("SE007", "SE030", "WRF","ERA5"),
+       col = c("blue", "darkgreen",  "red", "orange"), lwd = 2, cex = 0.8)
+
+dev.off()

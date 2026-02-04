@@ -1,0 +1,30 @@
+# Bu kodda hata değerleri heatmap olarak görselleştirilmektedir
+
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+df = pd.read_excel("veriler.xlsx")
+df.columns = ["YANGINLAR", "ISTASYON", "KAYNAK", "RMSE", "MAE", "NRMSE"]
+df[["YANGINLAR", "ISTASYON"]] = df[["YANGINLAR", "ISTASYON"]].fillna(method="ffill")
+metrics = ["RMSE", "MAE", "NRMSE"]
+
+fig, axes = plt.subplots(nrows=3, figsize=(10, 18))
+
+for ax, metric in zip(axes, metrics):
+    pivot_data = df.pivot_table(index=["YANGINLAR", "ISTASYON"], columns="KAYNAK", values=metric)
+    if metric == "NRMSE":
+        vmin, vmax = 0, 1
+        fmt = ".2%"
+    else:
+        vmin = df[metric].min()
+        vmax = df[metric].max()
+        fmt = ".2f"
+    sns.heatmap(pivot_data, annot=True, fmt=fmt, cmap="coolwarm", linewidths=0.5, ax=ax, vmin=vmin,
+        vmax=vmax,cbar_kws={'label': metric})
+    ax.set_title(f"{metric} Değerleri - WRF vs ERA5")
+    ax.set_ylabel("İstasyonlar")
+    ax.set_xlabel(" Kıyaslanan Veri Tipleri ")
+
+plt.tight_layout()
+plt.show()

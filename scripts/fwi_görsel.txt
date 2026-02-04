@@ -1,0 +1,75 @@
+# Bu kod ile raster verisi olan FWI değerleri görselleştirilmektedir
+
+import rasterio
+import numpy as np
+import matplotlib.pyplot as plt
+import geopandas as gpd
+import cartopy.crs as ccrs
+import cartopy.feature as cfeature
+import matplotlib.ticker as mticker
+
+raster_path = "fwi_result_lidia.tif"
+
+with rasterio.open(raster_path) as src:
+    band1 = src.read(1)
+    transform = src.transform
+    crs = src.crs
+    bounds = src.bounds
+
+masked = np.ma.masked_invalid(band1)
+county_shapefile = "tl_2024_us_county/tl_2024_us_county.shp"
+boundary_shapefile = "tl_2024_us_internationalboundary/tl_2024_us_internationalboundary.shp"
+counties = gpd.read_file(county_shapefile).to_crs(crs)
+boundaries = gpd.read_file(boundary_shapefile).to_crs(crs)
+
+koordinatlar = [
+    (-118.54453, 34.07022, "Palisides"),
+    (-118.069155, 34.203483, "Eaton"),
+    (-118.56687, 34.553008, "Hughes"),
+    (-118.66991, 34.185198, "Kenneth"),
+    (-118.478134, 34.32533, "Hurst"),
+    (-118.2433, 34.4408, "Lidia")
+]
+renkler = ["red", "red", "black", "black", "red", "red"]
+
+fig, ax = plt.subplots(figsize=(12, 8), subplot_kw={'projection': ccrs.PlateCarree()})
+img = ax.imshow(masked, cmap="hot", interpolation="nearest", extent=[bounds.left, 
+                bounds.right, bounds.bottom, bounds.top], origin="upper",alpha=0.8, 
+                transform=ccrs.PlateCarree(),vmin=0, vmax=70)
+
+counties.plot(ax=ax, facecolor='none', edgecolor='black', linestyle='dotted', linewidth=0.9, zorder=5, transform=ccrs.PlateCarree())
+boundaries.plot(ax=ax, facecolor='none', edgecolor='black', linestyle='-', linewidth=2.0, zorder=6, transform=ccrs.PlateCarree())
+ax.add_feature(cfeature.COASTLINE, linewidth=1.2, edgecolor='black', zorder=10)
+
+for i, (lon, lat, label) in enumerate(koordinatlar):
+    px, py = ~transform * (lon, lat)
+    row, col = int(py), int(px)
+    try:
+        fwi_degeri = band1[row, col]
+        if np.isnan(fwi_degeri):
+            metin = f"{label} (NaN)"
+        else:
+            metin = f"{label} ({fwi_degeri:.1f})"
+    except IndexError:
+        metin = f"{label} (Dışı)"
+    ax.plot(lon, lat, marker='o', color='black', markersize=6, transform=ccrs.PlateCarree())
+
+    ax.text( lon + 0.02, lat + 0.02, metin, fontsize=9, color=renkler[i % len(renkler)],
+    transform=ccrs.PlateCarree(), bbox=dict(facecolor='white', edgecolor='none', 
+    boxstyle='round,pad=0.2', alpha=0.8))
+
+plt.colorbar(img, ax=ax, orientation="vertical", fraction=0.03, pad=0.04, label="FWI")
+ax.set_title("Lidia Yangını Başlama Zamanı (08.01.2025/11 UTC) FWI Değerleri", fontsize=14)
+ax.set_extent([-119.25, -117.25, 33.50, 35.0], crs=ccrs.PlateCarree())
+
+gl = ax.gridlines(draw_labels=True, linewidth=1, color='gray', alpha=0.5, linestyle='--')
+gl.top_labels = False
+gl.right_labels = False
+gl.xlocator = mticker.MultipleLocator(0.25)
+gl.ylocator = mticker.MultipleLocator(0.25)
+gl.xlabel_style = {'size': 10}
+gl.ylabel_style = {'size': 10}
+
+plt.tight_layout()
+plt.savefig("fwi_harita_lidia.png", dpi=300, bbox_inches='tight')
+plt.show()
