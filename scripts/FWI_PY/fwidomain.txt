@@ -1,0 +1,65 @@
+#PYTHON
+#Excel verisini tif dosyasına her bir istasyon için çevirir.
+
+import pandas as pd
+import numpy as np
+import rasterio
+from rasterio.transform import from_origin
+from scipy.interpolate import griddata
+
+# Excel'den veriyi oku
+df = pd.read_excel("rasterfwi_lidia.xlsx")
+
+# Değişkenler ve koordinatlar
+variables = ["temp", "rh", "ws", "precip"]
+points = df[["lon", "lat"]].values
+
+# Grid çözünürlüğü (derece cinsinden)
+res = 0.01  # 0.01 derece ~1 km
+
+# Grid oluştur
+min_lon, max_lon = df["lon"].min(), df["lon"].max()
+min_lat, max_lat = df["lat"].min(), df["lat"].max()
+
+grid_lon, grid_lat = np.meshgrid(
+    np.arange(min_lon, max_lon, res),
+    np.arange(max_lat, min_lat, -res)  # üstten alta
+)
+
+# Raster veri dizisi (band, row, col)
+nrows, ncols = grid_lat.shape
+raster_array = np.zeros((len(variables), nrows, ncols))
+
+# Her değişken için interpolate et
+for band_idx, var in enumerate(variables):
+    values = df[var].values
+    grid_z = griddata(points, values, (grid_lon, grid_lat), method="linear")
+    # Eksik kalanları doldur (opsiyonel)
+    grid_z = np.nan_to_num(grid_z, nan=-9999)
+    raster_array[band_idx] = grid_z
+
+# Transform tanımla
+transform = from_origin(
+    west=min_lon,
+    north=max_lat,
+    xsize=res,
+    ysize=res
+)
+
+# GeoTIFF olarak yaz
+with rasterio.open(
+    "rasterfwi_lidia.tif",
+    "w",
+    driver="GTiff",
+    height=nrows,
+    width=ncols,
+    count=len(variables),
+    dtype=raster_array.dtype,
+    crs="EPSG:4326",
+    transform=transform,
+    nodata=-9999
+) as dst:
+    for b in range(len(variables)):
+        dst.write(raster_array[b], b + 1)
+
+print("🎯 Raster düzgün koordinatlarla oluşturuldu: rasterfwi_******.tif")

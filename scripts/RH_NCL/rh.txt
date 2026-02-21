@@ -1,0 +1,43 @@
+#NCL
+#rh.ncl betiğine aittir.
+begin
+  ; 1️⃣ WRF çıktı dosyasını oku
+  filename = "wrfout_d02_2025-01-01_00:00:00"
+  f = addfile(filename, "r")
+
+  ; 2️⃣ Göreceli nem (RH) hesapla (tüm zaman adımları)
+  rh = wrf_user_getvar(f, "rh", -1)  ; -1 = tüm zamanlar
+
+  ; 3️⃣ Koordinatları çek
+  lat = wrf_user_getvar(f, "lat", 0)
+  lon = wrf_user_getvar(f, "lon", 0)
+
+  ; 4️⃣ Zaman bilgisini çek
+  times = f->Times(:,:)  ; Karakter dizisi (Time x 19)
+
+  ; 5️⃣ Boyutları al
+  n_times = dimsizes(rh(:,0,0,0))
+
+  ; 6️⃣ Hedef nokta koordinatları
+  i_target = 53
+  j_target = 55
+
+  ; 7️⃣ CSV dizisi oluştur
+  n_lines = n_times + 1
+  out_data = new(n_lines, string)
+  out_data(0) = "time,i,j,lat,lon,RH"
+
+  ; 8️⃣ Satır satır doldur
+  do t = 0, n_times-1
+    time_str = chartostring(times(t,:))
+    rh_value = rh(t,0,i_target,j_target)  ; 0 = yüzey seviyesi
+    lat_value = lat(i_target,j_target)
+    lon_value = lon(i_target,j_target)
+    out_data(t+1) = time_str + "," + i_target + "," + j_target + "," + lat_value + "," + lon_value + "," + rh_value
+  end do
+
+  ; 9️⃣ CSV dosyasına yaz
+  asciiwrite("rh_timeseries_point_i" + i_target + "_j" + j_target + ".csv", out_data)
+
+  print("Nokta (i=" + i_target + ", j=" + j_target + ") için RH zaman serisi 'rh_timeseries_point_i" + i_target + "_j" + j_target + ".csv' dosyasına yazıldı.")
+end

@@ -1,0 +1,37 @@
+%MATLAB
+%tp.m betiğine aittir.
+
+% Dosya adı
+filename = 'tp.nc';
+
+% Hedef koordinat
+target_lat = 34.32533;
+target_lon = -118.478134;
+
+% NetCDF verilerini oku
+lat = ncread(filename, 'latitude');      % 5x1
+lon = ncread(filename, 'longitude');     % 13x1
+time = ncread(filename, 'valid_time');   % 744x1
+p = ncread(filename, 'tp');             % 13x5x744
+
+% En yakın grid noktasını bul (mutlak fark en küçük olan)
+[~, lat_idx] = min(abs(lat - target_lat));
+[~, lon_idx] = min(abs(lon - target_lon));
+
+% Uyarı ver (isteğe bağlı)
+fprintf('Seçilen grid noktası: lat = %.5f (index %d), lon = %.5f (index %d)\n', ...
+         lat(lat_idx), lat_idx, lon(lon_idx), lon_idx);
+
+% Seçilen nokta için zaman serisi verisi (tp)
+tp_series = squeeze(p(lon_idx, lat_idx, :));  % 744x1
+
+% Unix zamanını datetime formatına çevir
+time_dt = datetime(time, 'ConvertFrom', 'posixtime', 'TimeZone', 'UTC');
+
+% Excel tablosu oluştur
+T = table(time_dt, tp_series, 'VariableNames', {'Time', 'TotalPrecipitation_m'});
+
+% Excel dosyasına yaz
+writetable(T, 'tp_hurst.xlsx');
+
+disp('Veri Excel dosyasına başarıyla yazıldı: tp_hurst.xlsx');

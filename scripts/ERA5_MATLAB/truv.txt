@@ -1,0 +1,42 @@
+% MATLAB
+% truv.m betiğine aittir.
+
+% NetCDF dosya adı
+filename = 'truv.nc';
+
+% Latitude ve Longitude vektörlerini oku
+latitudes = ncread(filename, 'latitude');   % [5]
+longitudes = ncread(filename, 'longitude'); % [13]
+% [34.07022,-118.54453] Palisides (3,3)
+% [34.203483,-118.069155] Eaton (2,5)
+% [34.553008,-118.56687] Hughes (1,3)
+% [34.185198,-118.66991] Kenneth (2,2)
+% [34.32533,-118.478134] Hurst (2,3)
+% [34.4408,-118.2433] Lidia (1,4)
+% Grid noktası seçimi (örneğin 3. enlem ve 7. boylam noktasını seç)
+lat_index = 1; 
+lon_index = 4; 
+
+% Zaman bilgisi
+time_raw = ncread(filename, 'valid_time'); % UNIX epoch time
+ref_time = datetime(1970,1,1,0,0,0,'TimeZone','UTC');
+time = ref_time + seconds(time_raw); % Zamanı datetime formatına çevir
+
+% Verileri oku (sadece ilgili grid noktası)
+r = squeeze(ncread(filename, 'r', [lon_index, lat_index, 1, 1], [1, 1, 1, Inf]));
+t = squeeze(ncread(filename, 't', [lon_index, lat_index, 1, 1], [1, 1, 1, Inf]));
+u = squeeze(ncread(filename, 'u', [lon_index, lat_index, 1, 1], [1, 1, 1, Inf]));
+v = squeeze(ncread(filename, 'v', [lon_index, lat_index, 1, 1], [1, 1, 1, Inf]));
+
+% Tablo oluştur
+T = table(time, r, t, u, v, ...
+    'VariableNames', {'Time', 'RelativeHumidity', 'Temperature_K', 'WindU_mps', 'WindV_mps'});
+
+% Latitude ve Longitude bilgilerini başlığa dahil etmek istersen:
+disp(['Seçilen Grid Noktası -> Enlem: ', num2str(latitudes(lat_index)), ...
+      ', Boylam: ', num2str(longitudes(lon_index))]);
+
+% Excel dosyasına yaz
+writetable(T, 'truv_lidia.xlsx');
+
+disp('Seçilen grid noktasının verileri "truv_lidia.xlsx" dosyasına yazıldı.');

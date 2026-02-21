@@ -1,0 +1,51 @@
+#PYTHON
+
+#NC dosyasını domain olarak tek zaman aralığı için excel formatına çevirir.
+import netCDF4 as nc
+import pandas as pd
+import numpy as np
+
+# Dosya yolunu ayarla
+file_path = "wrfout_d02_2025-01-01_00_00_00"
+
+# NetCDF dosyasını oku
+ds = nc.Dataset(file_path)
+
+# Zaman adımı
+time_index = 171
+
+# Verileri al
+lat = ds.variables['XLAT'][time_index, :, :]     
+lon = ds.variables['XLONG'][time_index, :, :]
+t2 = ds.variables['T2'][time_index, :, :] - 273.15 
+q2 = ds.variables['Q2'][time_index, :, :]
+u10 = ds.variables['U10'][time_index, :, :]
+v10 = ds.variables['V10'][time_index, :, :]
+
+# Rüzgar hızı hesapla
+wind_speed = np.sqrt(u10**2 + v10**2)
+
+# Grid boyutları
+j_size, i_size = lat.shape
+
+# i ve j indeks matrislerini oluştur (1'den başlat)
+i_indices, j_indices = np.meshgrid(np.arange(1, i_size + 1), np.arange(1, j_size + 1))
+
+# Düzleştir ve DataFrame oluştur
+flat_data = {
+    'j_index': j_indices.flatten(),
+    'i_index': i_indices.flatten(),
+    'Latitude': lat.flatten(),
+    'Longitude': lon.flatten(),
+    'Temperature_2m_C': t2.flatten(),  # Celsius
+    'Relative_Humidity_2m': q2.flatten(),
+    'Wind_Speed_10m': wind_speed.flatten()  # m/s
+}
+
+df = pd.DataFrame(flat_data)
+
+# Excel dosyasına yaz
+excel_path = f'domain_{time_index}.xlsx'
+df.to_excel(excel_path, index=False)
+
+print(f"Veriler Excel dosyasına yazıldı: {excel_path}")

@@ -1,0 +1,41 @@
+#NCL
+#rhdomain.ncl betiğine aittir.
+begin
+  ;  WRF dosyasını oku
+  filename = "wrfout_d02_2025-01-01_00:00:00"
+  f = addfile(filename, "r")
+
+  ;  Göreceli nem (tek zaman adımı)
+  rh = wrf_user_getvar(f, "rh", 515)    ; 3D: bottom_top x south_north x west_east
+
+  ;  Koordinatlar
+  lat = wrf_user_getvar(f, "lat", 0)  ; 2D: south_north x west_east
+  lon = wrf_user_getvar(f, "lon", 0)
+
+  ;  Boyutları al
+  ni = dimsizes(rh(0,:,0))    ;
+  nj = dimsizes(rh(0,0,:))    ;
+
+  ;  Satır sayısı ve çıktı dizisi
+  n_lines = ni * nj + 1
+  out_data = new((/n_lines/), string)
+  out_data(0) = "i,j,lat,lon,RH"
+
+  ;  Satır satır veri oluştur
+  line = 1
+  do i = 0, ni - 1
+    do j = 0, nj - 1
+      rh_val  = rh(0,i,j)
+      lat_val = lat(i,j)
+      lon_val = lon(i,j)
+      out_data(line) = (i+1) + "," + (j+1) + "," + lat_val + "," + lon_val + "," + rh_val
+      line = line + 1
+    end do
+  end do
+
+  ;  CSV dosyasına yaz
+  out_filename = "rh_515.csv"
+  asciiwrite(out_filename, out_data)
+
+  print("✅ RH zaman adımı 0 verileri (i,j 1'den başlıyor) '" + out_filename + "' dosyasına yazıldı.")
+end

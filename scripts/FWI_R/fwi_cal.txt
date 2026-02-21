@@ -1,0 +1,50 @@
+#R PROGRAMING
+#Bu kodda  fwi hesaplamalarının her bir istasyon için daha kolay hesaplanabileceği process_fwi fonksiyonu tanımlanır.
+
+#Yüklenmesi gereken package'lar 
+library(cffdrs)
+library(readxl)
+library(openxlsx)
+
+# Fonksiyonu tanımlama
+process_fwi <- function(input_file, output_file, init_values) {
+  # Veriyi okuma
+  fire <- read_excel(input_file)
+  
+  # Fwi hesaplama
+  fwi_result <- fwi(fire, init = init_values)
+  
+  # Fwi verisini dataframe'e dönüştürme
+  df <- data.frame(FWI = fwi_result)
+  
+  # Veriyi Excel'e dönüştürme
+  write.xlsx(df, output_file)
+}
+#Burada hesaplama yaparken başlangıç kodlarını default alınacak sadece enlem bilgisi (lat) konuma göre değişecektir. c(ffmc = 85, dmc = 6, dc = 15, lat)
+
+process_fwi("palisides_SE030.xlsx", "fwiout_palisides_SE030.xlsx", c(85, 6, 15, 34.1))
+process_fwi("palisides_SE007.xlsx", "fwiout_palisides_SE007.xlsx", c(85, 6, 15, 34.09))
+process_fwi("eaton_SE215.xlsx", "fwiout_eaton_SE215.xlsx", c(85, 6, 15, 34.18))
+process_fwi("eaton_SE587.xlsx", "fwiout_eaton_SE587.xlsx", c(85, 6, 15, 34.18))
+process_fwi("hughes_728SE.xlsx", "fwiout_hughes_728SE.xlsx", c(85, 6, 15, 34.6))
+process_fwi("hughes_SE451.xlsx", "fwiout_hughes_SE451.xlsx", c(85, 6, 15, 34.6))
+process_fwi("kenneth_SE197.xlsx", "fwiout_kenneth_SE197.xlsx", c(85, 6, 15, 34.2))
+process_fwi("kenneth_SE269.xlsx", "fwiout_kenneth_SE269.xlsx", c(85, 6, 15, 34.17))
+process_fwi("hurst_F4236.xlsx", "fwiout_hurst_F4236.xlsx", c(85, 6, 15, 34.3))
+process_fwi("hurst_SE170.xlsx", "fwiout_hurst_SE170.xlsx", c(85, 6, 15, 34.3))
+process_fwi("lidia_SE677.xlsx", "fwiout_lidia_SE677.xlsx", c(85, 6, 15, 34.44))
+process_fwi("lidia_SE785.xlsx", "fwiout_lidia_SE785.xlsx", c(85, 6, 15, 34.44))
+
+process_fwi("palisides_era5.xlsx", "fwiout_palisides_era5.xlsx", c(85, 6, 15, 34))
+process_fwi("eaton_era5.xlsx", "fwiout_eaton_era5.xlsx", c(85, 6, 15, 34.25))
+process_fwi("hughes_era5.xlsx", "fwiout_hughes_era5.xlsx", c(85, 6, 15, 34.5))
+process_fwi("kenneth_era5.xlsx", "fwiout_kenneth_era5.xlsx", c(85, 6, 15, 34.25))
+process_fwi("hurst_era5.xlsx", "fwiout_hurst_era5.xlsx", c(85, 6, 15, 34.25))
+process_fwi("lidia_era5.xlsx", "fwiout_lidia_era5.xlsx", c(85, 6, 15, 34.5))
+
+process_fwi("wrf_palisides.xlsx", "fwiout_palisides_wrf.xlsx", c(85, 6, 15, 34.15))
+process_fwi("wrf_eaton.xlsx", "fwiout_eaton_wrf.xlsx", c(85, 6, 15, 34.2))
+process_fwi("wrf_hughes.xlsx", "fwiout_hughes_wrf.xlsx", c(85, 6, 15, 34.55))
+process_fwi("wrf_kenneth.xlsx", "fwiout_kenneth_wrf.xlsx", c(85, 6, 15, 34.19))
+process_fwi("wrf_hurst.xlsx", "fwiout_hurst_wrf.xlsx", c(85, 6, 15, 34.33))
+process_fwi("wrf_lidia.xlsx", "fwiout_lidia_wrf.xlsx", c(85, 6, 15, 34.44))
